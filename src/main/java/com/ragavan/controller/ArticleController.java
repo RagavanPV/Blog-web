@@ -2,6 +2,8 @@ package com.ragavan.controller;
 
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,16 +49,22 @@ public class ArticleController {
 	}
 
 	@GetMapping("comments")
-	public String indexComments(ModelMap modelMap, @RequestParam("articleId") int articleId) {
+	public String indexComments(ModelMap modelMap, @RequestParam("articleId") int articleId,HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		if (userSession.getRoleId().getId() != 1) {
 		CommentService commentService = new CommentService();
 		List<Comment> commentList = commentService.listByArticleIdService(articleId);
 		modelMap.addAttribute("update", 0);
 		modelMap.addAttribute("COMMENT_LIST", commentList);
-		return "../commentlist.jsp";
+		return "../commentlist.jsp";}
+		else
+			return "redirect:/";
 	}
 
 	@GetMapping("/other")
-	public String indexOtherUsers(ModelMap modelMap, @RequestParam("userId") int userId) {
+	public String indexOtherUsers(ModelMap modelMap, @RequestParam("userId") int userId,HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		if (userSession.getRoleId().getId() != 1) {
 		List<Article> articleList = null;
 		try {
 			articleList = articleService.listOtherUserService(userId);
@@ -66,11 +74,15 @@ public class ArticleController {
 		modelMap.addAttribute("userId", userId);
 		modelMap.addAttribute("update", 0);
 		modelMap.addAttribute("ARTICLE_LIST", articleList);
-		return "../articlelist.jsp";
+		return "../articlelist.jsp";}
+		else
+			return "redirect:/";
 	}
 
 	@GetMapping("/user")
-	public String index(ModelMap modelMap, @RequestParam("userName") String name) {
+	public String index(ModelMap modelMap, @RequestParam("userName") String name,HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		if (userSession.getRoleId().getId() != 1) {
 		UserService userService = new UserService();
 		List<Article> articleList = null;
 		int roleId = 0;
@@ -86,12 +98,16 @@ public class ArticleController {
 		modelMap.addAttribute("userId", userId);
 		modelMap.addAttribute("update", 1);
 		modelMap.addAttribute("ARTICLE_LIST", articleList);
-		return "../articlelist.jsp";
+		return "../articlelist.jsp";}
+		else
+			return "redirect:/";
 	}
 
 	@GetMapping("/publish")
 	public String publish(@RequestParam("title") String name, @RequestParam("content") String content,
-			@RequestParam("userId") int userId) {
+			@RequestParam("userId") int userId,HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		if (userSession.getRoleId().getId() == 2) {
 		article.setTitle(name);
 		article.setContent(content);
 
@@ -104,19 +120,27 @@ public class ArticleController {
 		} catch (ServiceException e) {
 			e.printStackTrace();
 		}
-		return "../publishcategory.jsp";
+		return "../publishcategory.jsp";}
+		else
+			return "redirect:/";
 	}
 
 	@GetMapping("/update")
-	public String update(@RequestParam("id") int id) {
+	public String update(@RequestParam("id") int id,HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		if (userSession.getRoleId().getId() != 1) {
 		article.setId(id);
 		article.getId();
-		return "../updatearticle.jsp";
+		return "../updatearticle.jsp";}
+		else
+			return "redirect:/";
 	}
 
 	@GetMapping("/updateArticle")
 	public String update(@RequestParam("title") String title, @RequestParam("content") String content,
-			@RequestParam("articleId") int articleId) {
+			@RequestParam("articleId") int articleId,HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		if (userSession.getRoleId().getId() != 1) {
 		article.setTitle(title);
 		article.setContent(content);
 		article.setId(articleId);
@@ -126,11 +150,15 @@ public class ArticleController {
 		} catch (ServiceException e) {
 			e.printStackTrace();
 		}
-		return "redirect:../articles/user?userName=" + userName;
+		return "redirect:../articles/user?userName=" + userName;}
+		else
+			return "redirect:/";
 	}
 
 	@GetMapping("/delete")
-	public String delete(@RequestParam("id") int id) {
+	public String delete(@RequestParam("id") int id,HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		if (userSession.getRoleId().getId() != 1) {
 		article.setId(id);
 		String userName = articleService.getUserIdByArticleId(id);
 		try {
@@ -138,7 +166,9 @@ public class ArticleController {
 		} catch (ServiceException e) {
 			e.printStackTrace();
 		}
-		return "redirect:../articles/user?userName=" + userName;
+		return "redirect:../articles/user?userName=" + userName;}
+		else
+			return "redirect:/";
 	}
 
 }
