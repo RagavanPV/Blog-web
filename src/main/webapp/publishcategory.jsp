@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Insert title here</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css">
-  <script type="text/javascript"src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
 </head>
 <body>
@@ -24,6 +24,12 @@
 	</div>
 	</div>
 	</div>
+	<%if(request.getParameter("success")!=null){
+		%>
+		<a>Category exists</a>
+		<%
+			}
+		%>
 	<jsp:include page="footer.jsp"></jsp:include>
 </body>
 </html>

@@ -5,6 +5,9 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.mail.EmailException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +20,8 @@ import com.ragavan.model.Role;
 import com.ragavan.model.User;
 import com.ragavan.service.RoleService;
 import com.ragavan.service.UserService;
+import com.ragavan.util.ActivationUtil;
+import com.ragavan.util.MailUtil;
 
 @Controller
 @RequestMapping("/users")
@@ -24,6 +29,7 @@ public class UserController {
 	private User user = new User();
 
 	private UserService userService = new UserService();
+	PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
 	@GetMapping
 	public String index(ModelMap modelMap, HttpSession httpSession) {
@@ -52,6 +58,22 @@ public class UserController {
 		} else {
 			return "redirect:/";
 		}
+	}
+
+	@GetMapping("/activate")
+	public String activate(@RequestParam("code") String code, @RequestParam("userName") String userName) {
+		User user = new User();
+		user.setActivationCode(code);
+		user.setUserName(userName);
+		try {
+			System.out.println("code");
+			userService.activateUserService(user);
+			System.out.println("code2");
+		} catch (ServiceException e) {
+			e.printStackTrace();
+		}
+		return "redirect:../?activate=1";
+
 	}
 
 	@GetMapping("/update")
@@ -92,19 +114,43 @@ public class UserController {
 			return "redirect:/";
 		}
 	}
+	@GetMapping("/updateRole")
+	public String updateRole(@RequestParam("role") int roleId, HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		System.out.println(userSession.getUserName());
+		if (userSession.getRoleId().getId() == 1) {
+			Role role = new Role();
+			role.setId(roleId);
+			user.setRoleId(role);
+			try {
+				userService.updateRoleService(user);
+			} catch (ServiceException e) {
+				e.printStackTrace();
+			}
+			System.out.println(userSession.getUserName());
+			return "redirect:../users";
+		} else {
+			return "redirect:/";
+		}
+	}
 
 	@PostMapping("/save")
 	public String store(@RequestParam("userName") String name, @RequestParam("password") String password,
 			@RequestParam("emailId") String emailid, ModelMap modelMap) {
 		user.setUserName(name);
-		user.setPassword(password);
+		user.setPassword(passwordEncoder.encode(password));
+		user.setActivationCode(ActivationUtil.activateString());
+		System.out.println(user.getActivationCode());
 		user.setEmailId(emailid);
 		int result = 0;
 		try {
 			result = userService.saveService(user);
+			MailUtil.sendActivationMail(user);
 
 		} catch (ServiceException e) {
 			modelMap.addAttribute("REGISTER_ERROR", e.getMessage());
+		} catch (EmailException e) {
+			e.printStackTrace();
 		}
 		if (result == 1) {
 			return "redirect:../";
@@ -115,35 +161,43 @@ public class UserController {
 	@PostMapping("/login")
 	public String store(HttpSession httpSession, @RequestParam("userName") String name,
 			@RequestParam("password") String password) {
-		User userLogin=new User();
+		User userLogin = new User();
 		userLogin.setUserName(name);
-		userLogin.setPassword(password);
 		boolean result = false;
+		boolean isactive = false;
 		int roleid = 0;
-		int userid=0;
+		int userid = 0;
 		try {
-			roleid = userService.functionGetRoleId(name);
-			result = userService.functionLoginService(userLogin);
-			userid=userService.functionGetUserId(name);
-			if (result) {
-				Role role = new Role();
-				role.setId(roleid);
-				userLogin.setRoleId(role);
-				userLogin.setId(userid);
-				userLogin.setEmailId(userService.functionGetUserEmail(userid));
+			if (userService.functionGetUserId(name) != 0) {
+				String hashedPassword = userService.getHashedPassword(name);
+				roleid = userService.functionGetRoleId(name);
+				result = passwordEncoder.matches(password, hashedPassword);
+				userid = userService.functionGetUserId(name);
+				isactive = userService.functionIsValidUserService(name);
+				if (result) {
+					Role role = new Role();
+					role.setId(roleid);
+					userLogin.setRoleId(role);
+					userLogin.setId(userid);
+					userLogin.setEmailId(userService.functionGetUserEmail(userid));
+				}
 			}
 		} catch (ServiceException e) {
 			e.printStackTrace();
 		}
-		if (result) {
-			if (roleid == 1) {
-				httpSession.setAttribute("LOGGED_USER", userLogin);
-				return "redirect:../users";
 
-			} else {
-				httpSession.setAttribute("LOGGED_USER", userLogin);
-				return "redirect:../articles/user?userName=" + name;
-			}
+		if (result) {
+			if (isactive) {
+				if (roleid == 1) {
+					httpSession.setAttribute("LOGGED_USER", userLogin);
+					return "redirect:../users";
+
+				} else {
+					httpSession.setAttribute("LOGGED_USER", userLogin);
+					return "redirect:../articles/user?userName=" + name;
+				}
+			} else
+				return "redirect:../?activate=0&result=" + result;
 		} else
 			return "redirect:../?success=0";
 	}

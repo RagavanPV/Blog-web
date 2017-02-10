@@ -20,12 +20,12 @@
 							autofocus /> <label for="userName">UserName</label>
 					</div>
 					<div class="input-field col s12">
-						<input type="password" id="password" name="password" required  />
+						<input type="password" id="password" name="password" required />
 						<label for="password">Password</label>
 					</div>
 					<div class="input-field col s12">
-						<input type="email" id="EmailId" name="emailId" required />
-						<label for="EmailId">Email Id</label>
+						<input type="email" id="EmailId" name="emailId" required /> <label
+							for="EmailId">Email Id</label>
 					</div>
 
 					<button type="submit" class="btn waves-effect waves-light">Register</button>
@@ -45,7 +45,8 @@
 				<h3>Login User</h3>
 				<form action="users/login" method="POST">
 					<div class="input-field col s12">
-						<input type="text" id="userName" name="userName" required/> <label for="userName">UserName</label>
+						<input type="text" id="userName" name="userName" required /> <label
+							for="userName">UserName</label>
 					</div>
 					<div class="input-field col s12">
 						<input type="password" id="password" name="password" required />
@@ -62,6 +63,20 @@
 				%>
 			</div>
 		</div>
+		<%if(request.getParameter("activate")!=null){
+			if (Integer.parseInt(request.getParameter("activate")) == 0) {
+		%>
+		<a>Please active your mail</a>
+		<%
+			}
+		%>
+		<%
+			if (Integer.parseInt(request.getParameter("activate")) == 1) {
+		%>
+		<a>Activation Successfull</a>
+		<%
+			}}
+		%>
 	</div>
 	<jsp:include page="footer.jsp"></jsp:include>
 	<script type="text/javascript"
