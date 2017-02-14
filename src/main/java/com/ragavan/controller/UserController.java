@@ -26,29 +26,35 @@ import com.ragavan.util.MailUtil;
 @Controller
 @RequestMapping("/users")
 public class UserController {
-	private User user = new User();
+	private static final String LOGGED_USER = "LOGGED_USER";
+
 
 	private UserService userService = new UserService();
 	PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
 	@GetMapping
 	public String index(ModelMap modelMap, HttpSession httpSession) {
-		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
-		if (userSession.getRoleId().getId() == 1) {
+		User userSession = (User) httpSession.getAttribute(LOGGED_USER);
+		if (userSession != null) {
+			if(userSession.getRoleId().getId()==1){
 			List<User> userList = userService.listService();
 			modelMap.addAttribute("USER_LIST", userList);
 			return "userlist.jsp";
-		} else {
-			System.out.println(userSession.getUserName());
+			}
+			else
+				return "redirect:/";
+		}
+		 else {
 			return "redirect:/";
 		}
 	}
 
 	@GetMapping("/delete")
 	public String delete(@RequestParam("id") int id, HttpSession httpSession) {
-		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		User userSession = (User) httpSession.getAttribute(LOGGED_USER);
+		if(userSession != null){
 		if (userSession.getRoleId().getId() == 1) {
-			user.setId(id);
+//			user.setId(id);
 			try {
 				userService.deleteService(id);
 			} catch (ServiceException e) {
@@ -58,6 +64,8 @@ public class UserController {
 		} else {
 			return "redirect:/";
 		}
+		}
+		else return "redirect:/";
 	}
 
 	@GetMapping("/activate")
@@ -66,9 +74,7 @@ public class UserController {
 		user.setActivationCode(code);
 		user.setUserName(userName);
 		try {
-			System.out.println("code");
 			userService.activateUserService(user);
-			System.out.println("code2");
 		} catch (ServiceException e) {
 			e.printStackTrace();
 		}
@@ -78,13 +84,14 @@ public class UserController {
 
 	@GetMapping("/update")
 	public String update(ModelMap modelMap, @RequestParam("id") int id, HttpSession httpSession) {
-		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
+		User user = new User();
+		User userSession = (User) httpSession.getAttribute(LOGGED_USER);
 		if (userSession.getRoleId().getId() == 1) {
 			user.setId(id);
 			RoleService roleService = new RoleService();
 			List<Role> roleList = roleService.listService();
+			System.out.println(roleList);
 			modelMap.addAttribute("ROLE_LIST", roleList);
-			System.out.println(userSession.getUserName());
 			return "../updateuser.jsp";
 		} else {
 			return "redirect:/";
@@ -94,8 +101,8 @@ public class UserController {
 	@GetMapping("/updateUser")
 	public String update(@RequestParam("userName") String name, @RequestParam("password") String password,
 			@RequestParam("emailId") String emailid, @RequestParam("role") int roleId, HttpSession httpSession) {
-		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
-		System.out.println(userSession.getUserName());
+		User userSession = (User) httpSession.getAttribute(LOGGED_USER);
+		User user = new User();
 		if (userSession.getRoleId().getId() == 1) {
 			user.setUserName(name);
 			user.setPassword(password);
@@ -108,26 +115,27 @@ public class UserController {
 			} catch (ServiceException e) {
 				e.printStackTrace();
 			}
-			System.out.println(userSession.getUserName());
 			return "redirect:../users";
 		} else {
 			return "redirect:/";
 		}
 	}
 	@GetMapping("/updateRole")
-	public String updateRole(@RequestParam("role") int roleId, HttpSession httpSession) {
-		User userSession = (User) httpSession.getAttribute("LOGGED_USER");
-		System.out.println(userSession.getUserName());
+	public String updateRole(@RequestParam("id") int id,@RequestParam("role") int roleId, HttpSession httpSession) {
+		User userSession = (User) httpSession.getAttribute(LOGGED_USER);
+		User user = new User();
 		if (userSession.getRoleId().getId() == 1) {
 			Role role = new Role();
 			role.setId(roleId);
 			user.setRoleId(role);
+			user.setId(id);
 			try {
+				System.out.println(role.getId());
 				userService.updateRoleService(user);
+				System.out.println("Success");
 			} catch (ServiceException e) {
 				e.printStackTrace();
 			}
-			System.out.println(userSession.getUserName());
 			return "redirect:../users";
 		} else {
 			return "redirect:/";
@@ -137,10 +145,10 @@ public class UserController {
 	@PostMapping("/save")
 	public String store(@RequestParam("userName") String name, @RequestParam("password") String password,
 			@RequestParam("emailId") String emailid, ModelMap modelMap) {
+		User user = new User();
 		user.setUserName(name);
 		user.setPassword(passwordEncoder.encode(password));
 		user.setActivationCode(ActivationUtil.activateString());
-		System.out.println(user.getActivationCode());
 		user.setEmailId(emailid);
 		int result = 0;
 		try {
@@ -189,11 +197,11 @@ public class UserController {
 		if (result) {
 			if (isactive) {
 				if (roleid == 1) {
-					httpSession.setAttribute("LOGGED_USER", userLogin);
+					httpSession.setAttribute(LOGGED_USER, userLogin);
 					return "redirect:../users";
 
 				} else {
-					httpSession.setAttribute("LOGGED_USER", userLogin);
+					httpSession.setAttribute(LOGGED_USER, userLogin);
 					return "redirect:../articles/user?userName=" + name;
 				}
 			} else
@@ -205,8 +213,8 @@ public class UserController {
 	@GetMapping("/logout")
 	public String logout(HttpServletRequest request) {
 		HttpSession httpSession = request.getSession(false);
-		Object user = httpSession.getAttribute("LOGGED_USER");
-		if (user != null) {
+		Object userSession = httpSession.getAttribute(LOGGED_USER);
+		if (userSession != null) {
 			httpSession.invalidate();
 			return "redirect:/";
 		} else {

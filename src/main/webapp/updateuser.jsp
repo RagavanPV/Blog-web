@@ -34,6 +34,7 @@
 							<option value="${c.id}">${c.roleName}</option>
 						</c:forEach>
 					</select>
+					<input type="hidden" name="id" value=<%=request.getParameter("id") %>>
 					<button type="submit" class="btn waves-effect waves-light">Update</button>
 				</form>
 			</div>

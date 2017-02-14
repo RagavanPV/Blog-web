@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.mysql.cj.x.json.JsonArray;
 import com.ragavan.exception.ServiceException;
 import com.ragavan.model.Article;
 import com.ragavan.model.Category;
@@ -64,7 +63,6 @@ public class CategoryController {
 		User u=(User) httpSession.getAttribute("LOGGED_USER");
 		JSONObject category=new JSONObject(categoryList);
 		JSONArray tags=category.getJSONArray("category");
-		 System.out.println(tags);
 		for(int i=0;i<tags.length();i++){
 			JSONObject obj=tags.getJSONObject(i);
 			Category cate = new Category();
@@ -81,7 +79,6 @@ public class CategoryController {
 				e.printStackTrace();
 			
 			}
-			System.out.println(obj.get("tag"));
 		}
 		return "../articles/user?userName=" + userName;
 	}
@@ -91,8 +88,7 @@ public class CategoryController {
 		JSONObject category=new JSONObject(categoryList);
 		JSONArray tags=category.getJSONArray("category");
 		for(int i=0;i<tags.length();i++){
-			JSONObject obj=tags.getJSONObject(i);
-			System.out.println(obj.get("tag"));
+			tags.getJSONObject(i);
 		}
 		
 	}

@@ -20,7 +20,7 @@
 							autofocus /> <label for="userName">UserName</label>
 					</div>
 					<div class="input-field col s12">
-						<input type="password" id="password" name="password" required />
+						<input type="password" id="password" name="password" required minlength=5 maxlength=10/>
 						<label for="password">Password</label>
 					</div>
 					<div class="input-field col s12">
