@@ -1,0 +1,6 @@
+com\ragavan\Application.class
+com\ragavan\controller\CategoryController.class
+com\ragavan\controller\CommentController.class
+com\ragavan\controller\ArticleController.class
+com\ragavan\controller\HomeController.class
+com\ragavan\controller\UserController.class
